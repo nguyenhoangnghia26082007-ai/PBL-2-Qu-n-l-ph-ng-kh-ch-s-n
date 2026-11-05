@@ -1,0 +1,5 @@
+# tenDangNhap|hoTen|maNV|vaiTro(QUAN_LY|LE_TAN|BUONG_PHONG)|matKhau|biKhoa(0/1)|soLanSai
+admin|Nguyen Hoang Nghia|NV03|QUAN_LY|admin123|0|0
+letan|Nguyễn Hoàng Nghĩa|NV01|LE_TAN|letan123|0|0
+thungan|Trần Thu Hà|NV02|LE_TAN|thungan123|0|0
+buongphong|Võ Thị Lan||BUONG_PHONG|buongphong123|0|0

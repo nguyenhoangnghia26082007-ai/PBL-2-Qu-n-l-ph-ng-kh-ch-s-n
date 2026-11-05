@@ -1,0 +1,4 @@
+# ma|hoTen|cccd|soDienThoai|chucVu(0=LE_TAN,1=THU_NGAN,2=QUAN_LY,3=KE_TOAN)|ngayVaoLam|soHoaDonDaLap
+NV01|Nguyen Hoang Nghia|||0|01/06/2025|0
+NV02|Tran Thu Ha|||1|01/07/2025|0
+NV03|Pham Quang Ly|||2|01/01/2025|1

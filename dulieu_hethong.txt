@@ -1,0 +1,3 @@
+# DEM|demHoaDon|demGiaoDich   va   CONGDIEM|maHD (hoa don da cong diem thanh vien)
+DEM|1|1
+CONGDIEM|HD0001

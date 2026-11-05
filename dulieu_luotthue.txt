@@ -1,0 +1,2 @@
+# LT|maLT|maPhong|maKH|ngayNhan|ngayTra|daTra(0/1)|donGiaChot   va   DV|maLT|maDV|soLuong|ngay|thanhTien
+LT|LTP101-1|P101|KH01|05/11/2026|05/11/2026|1|400000

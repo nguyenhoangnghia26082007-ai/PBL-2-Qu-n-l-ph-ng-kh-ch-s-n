@@ -1,0 +1,35 @@
+# Build directories
+build/
+bin/
+out/
+.dist/
+x64/
+x86/
+Debug/
+Release/
+
+# Visual Studio files
+.vs/
+*.sln.docstates
+*.user
+*.suo
+
+# Compiled objects & binaries
+*.exe
+*.obj
+*.o
+*.lib
+*.a
+*.pdb
+*.ilk
+*.idb
+
+# CMake artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+# System & temporary files
+.DS_Store
+Thumbs.db
+hoadon_*.txt

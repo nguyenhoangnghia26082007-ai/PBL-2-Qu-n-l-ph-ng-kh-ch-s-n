@@ -1,0 +1,4 @@
+# HD|maHD|maLT|maNVLap|ngayLap|tienPhong|tienDichVu|giamGia|VAT|tongCong|daHuy(0/1)   DONG|maHD|moTa|soLuong|donGia|thanhTien   TT|maHD|maGD|soTien|hinhThuc(0..4)|ngay|maNVThu|soThamChieu|daHoan(0/1)
+HD|HD0001|LTP101-1|NV03|05/11/2026|400000|0|0|40000|440000|0
+DONG|HD0001|Tien phong P101 (1 dem)|1|400000|400000
+TT|HD0001|GD0001|440000|0|05/11/2026|NV03|440000|0
