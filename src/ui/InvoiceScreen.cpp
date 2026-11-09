@@ -30,6 +30,7 @@ InvoiceScreen::InvoiceScreen(AuthService& a, KhachSanService& s) : auth(a), serv
 
     oSoTienThu.goiY = "Số tiền thu";
     oSoTienThu.toiDa = 14;
+    oSoTienThu.chiNhapTien = true;
 
     oSoThamChieu.goiY = "Mã GD ngân hàng / tham chiếu";
     oSoThamChieu.toiDa = 32;
@@ -68,7 +69,7 @@ void InvoiceScreen::chonHoaDon(const std::string& maHD) {
     KetQua kq = service.chiTietHoaDon(maHD, chiTiet);
     if (!kq.ok) { maHDChon.clear(); return; }
 
-    oSoTienThu.giaTri = std::to_string(chiTiet.conPhaiTra);
+    oSoTienThu.giaTri = Widgets::dinhDangTienNhap(std::to_string(chiTiet.conPhaiTra));
     oSoThamChieu.giaTri.clear();
     oNgayThu.giaTri = Date::homNay().str();
     hinhThucChonIdx = 0;
@@ -265,7 +266,7 @@ void InvoiceScreen::Draw(Rectangle vung) {
             VeOTextNhap({ix + 90, py, 140, 36}, oSoTienThu);
 
             if (VeNut({ix + 240, py, 85, 36}, "Thu hết", KieuNut::PHU, true, Theme::CO_NHO)) {
-                oSoTienThu.giaTri = std::to_string(chiTiet.conPhaiTra);
+                oSoTienThu.giaTri = Widgets::dinhDangTienNhap(std::to_string(chiTiet.conPhaiTra));
             }
 
             py += 44;
@@ -274,7 +275,7 @@ void InvoiceScreen::Draw(Rectangle vung) {
 
             py += 64;
             if (VeNut({ix, py, iw, 44}, "Xác nhận thu tiền", KieuNut::CHINH, true, Theme::CO_THUONG)) {
-                long long tien = std::atoll(oSoTienThu.giaTri.c_str());
+                long long tien = Widgets::layGiaTriTien(oSoTienThu.giaTri);
                 KetQua kq = service.thanhToanHoaDon(chiTiet.maHD, tien, static_cast<HinhThucThanhToan>(hinhThucChonIdx),
                                                     oSoThamChieu.giaTri, oNgayThu.giaTri);
                 ThongBao::hien(kq.thongBao, kq.ok ? ThongBao::Loai::THANH_CONG : ThongBao::Loai::LOI);

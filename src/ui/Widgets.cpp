@@ -70,30 +70,110 @@ void Widgets::veAnhPhuKin(Texture2D tex, Rectangle dich) {
     DrawTexturePro(tex, nguon, dich, {0, 0}, 0, WHITE);
 }
 
+std::string Widgets::dinhDangTienNhap(const std::string& chuoi) {
+    std::string raw;
+    for (char c : chuoi) {
+        if (c >= '0' && c <= '9') {
+            raw += c;
+        }
+    }
+    while (raw.size() > 1 && raw[0] == '0') {
+        raw.erase(raw.begin());
+    }
+    if (raw.empty()) return "";
+
+    std::string ketQua;
+    int dem = 0;
+    for (int i = (int)raw.size() - 1; i >= 0; --i) {
+        ketQua.insert(ketQua.begin(), raw[i]);
+        if (++dem % 3 == 0 && i > 0) {
+            ketQua.insert(ketQua.begin(), ' ');
+        }
+    }
+    return ketQua;
+}
+
+long long Widgets::layGiaTriTien(const std::string& chuoi) {
+    std::string raw;
+    for (char c : chuoi) {
+        if (c >= '0' && c <= '9') {
+            raw += c;
+        }
+    }
+    if (raw.empty()) return 0LL;
+    try {
+        return std::stoll(raw);
+    } catch (...) {
+        return 0LL;
+    }
+}
+
 // ===================== O nhap chu =====================
 bool VeOTextNhap(Rectangle r, OTextNhap& o) {
     bool hover = Widgets::diChuotVao(r);
     if (hover) g_conTro = MOUSE_CURSOR_IBEAM;
     if (Widgets::nhanChuot() && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) o.dangChon = hover;
 
+    if (o.chiNhapTien && !o.giaTri.empty()) {
+        std::string dd = Widgets::dinhDangTienNhap(o.giaTri);
+        if (dd != o.giaTri) o.giaTri = dd;
+    }
+
     bool enter = false;
     if (o.dangChon && Widgets::nhanChuot()) {
-        // Nhan ky tu Unicode (go tieng Viet bang Unikey/EVKey van hoat dong)
-        for (int cp = GetCharPressed(); cp > 0; cp = GetCharPressed()) {
-            if (cp >= 32 && demKyTu(o.giaTri) < o.toiDa) {
-                int n = 0;
-                const char* u = CodepointToUTF8(cp, &n);
-                o.giaTri.append(u, n);
+        if (o.chiNhapTien) {
+            for (int cp = GetCharPressed(); cp > 0; cp = GetCharPressed()) {
+                if (cp >= '0' && cp <= '9') {
+                    std::string raw;
+                    for (char c : o.giaTri) if (c >= '0' && c <= '9') raw += c;
+                    if (raw.size() < o.toiDa) {
+                        if (raw == "0") raw.clear();
+                        raw += (char)cp;
+                        o.giaTri = Widgets::dinhDangTienNhap(raw);
+                    }
+                }
             }
+            if (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) {
+                std::string raw;
+                for (char c : o.giaTri) if (c >= '0' && c <= '9') raw += c;
+                if (!raw.empty()) {
+                    raw.pop_back();
+                    o.giaTri = Widgets::dinhDangTienNhap(raw);
+                }
+            }
+            bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+            if (ctrl && IsKeyPressed(KEY_V)) {
+                if (const char* c = GetClipboardText()) {
+                    std::string raw;
+                    for (char ch : o.giaTri) if (ch >= '0' && ch <= '9') raw += ch;
+                    for (const char* p = c; *p; ++p) {
+                        if (*p >= '0' && *p <= '9' && raw.size() < o.toiDa) {
+                            if (raw == "0") raw.clear();
+                            raw += *p;
+                        }
+                    }
+                    o.giaTri = Widgets::dinhDangTienNhap(raw);
+                }
+            }
+            enter = IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);
+        } else {
+            // Nhan ky tu Unicode (go tieng Viet bang Unikey/EVKey van hoat dong)
+            for (int cp = GetCharPressed(); cp > 0; cp = GetCharPressed()) {
+                if (cp >= 32 && demKyTu(o.giaTri) < o.toiDa) {
+                    int n = 0;
+                    const char* u = CodepointToUTF8(cp, &n);
+                    o.giaTri.append(u, n);
+                }
+            }
+            if (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) xoaKyTuCuoi(o.giaTri);
+            bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+            if (ctrl && IsKeyPressed(KEY_V) && !o.anKyTu) { // dan tu clipboard (khong ap dung cho mat khau)
+                if (const char* c = GetClipboardText())
+                    for (const char* p = c; *p && demKyTu(o.giaTri) < o.toiDa; ++p)
+                        if (*p != '\n' && *p != '\r' && *p != '\t') o.giaTri += *p;
+            }
+            enter = IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);
         }
-        if (IsKeyPressed(KEY_BACKSPACE) || IsKeyPressedRepeat(KEY_BACKSPACE)) xoaKyTuCuoi(o.giaTri);
-        bool ctrl = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
-        if (ctrl && IsKeyPressed(KEY_V) && !o.anKyTu) { // dan tu clipboard (khong ap dung cho mat khau)
-            if (const char* c = GetClipboardText())
-                for (const char* p = c; *p && demKyTu(o.giaTri) < o.toiDa; ++p)
-                    if (*p != '\n' && *p != '\r' && *p != '\t') o.giaTri += *p;
-        }
-        enter = IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER);
     }
 
     // ---- Ve ----

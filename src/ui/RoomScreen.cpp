@@ -29,8 +29,9 @@ RoomScreen::RoomScreen(AuthService& a, KhachSanService& s) : auth(a), service(s)
 
     oMaPhongMoi.goiY = "VD: P202";
     oMaPhongMoi.toiDa = 12;
-    oGiaPhongMoi.goiY = "Đơn giá (VD: 500000)";
+    oGiaPhongMoi.goiY = "Đơn giá (VD: 500 000)";
     oGiaPhongMoi.toiDa = 12;
+    oGiaPhongMoi.chiNhapTien = true;
     oNgayDuaMoi.toiDa = 12;
 }
 
@@ -461,7 +462,7 @@ void RoomScreen::Draw(Rectangle vung) {
 
         if (VeNut(nutHuy, "Hủy", KieuNut::PHU)) moModalThemPhong = false;
         if (VeNut(nutXacNhan, "Tạo phòng", KieuNut::CHINH)) {
-            long long gia = std::atoll(oGiaPhongMoi.giaTri.c_str());
+            long long gia = Widgets::layGiaTriTien(oGiaPhongMoi.giaTri);
             KetQua kq = service.themPhong(dsLoai[loaiPhongChonIdx], oMaPhongMoi.giaTri, gia, oNgayDuaMoi.giaTri);
             ThongBao::hien(kq.thongBao, kq.ok ? ThongBao::Loai::THANH_CONG : ThongBao::Loai::LOI);
             if (kq.ok) {

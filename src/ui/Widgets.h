@@ -19,15 +19,21 @@ namespace Widgets {
     void veBong(Rectangle r, float px, int lop = 6);
     void veThe(Rectangle r, float px = 14);   // the trang bo goc co bong
     void veAnhPhuKin(Texture2D tex, Rectangle dich); // anh phu kin vung, cat phan thua (kieu "cover")
+
+    // Dinh dang chuoi so tien cach nhau 3 chu so (vd: "1000000" -> "1 000 000")
+    std::string dinhDangTienNhap(const std::string& chuoi);
+    // Lay gia tri so nguyen (loai bo dau cach va ky tu khong phai so)
+    long long layGiaTriTien(const std::string& chuoi);
 }
 
-// ---- O nhap chu (ho tro tieng Viet UTF-8, an ky tu cho mat khau) ----
+// ---- O nhap chu (ho tro tieng Viet UTF-8, an ky tu cho mat khau, dinh dang tien) ----
 struct OTextNhap {
     std::string giaTri;
     std::string goiY;          // chu mo khi o rong
     bool anKyTu = false;       // true: hien "•" thay cho ky tu
     bool dangChon = false;     // dang nhan ban phim
-    size_t toiDa = 64;         // so ky tu toi da
+    size_t toiDa = 64;         // so ky tu toi da (neu la tien: toi da chu so)
+    bool chiNhapTien = false;  // true: tu dong tach dau cach moi 3 chu so (vd: 1 000 000)
 };
 // Tra ve true khi nhan Enter trong luc o dang duoc chon
 bool VeOTextNhap(Rectangle r, OTextNhap& o);
