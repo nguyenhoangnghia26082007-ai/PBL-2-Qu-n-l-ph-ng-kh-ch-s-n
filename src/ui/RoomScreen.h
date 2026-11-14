@@ -21,7 +21,7 @@ class RoomScreen : public ManHinhCoSo {
 
     // Check-in (Nhan phong)
     std::string maKhachNhan, tenKhachNhan;
-    OTextNhap oNgayNhan;
+    OTextNhap oNgayNhan, oNgayTraDuKien;
     bool moPopupChonKhach = false;
     OTextNhap oTimKhach;
     std::vector<KhachHangNhanh> dsKhach;
@@ -37,7 +37,7 @@ class RoomScreen : public ManHinhCoSo {
 
     // Quan ly phong (Them / Xoa)
     bool moModalThemPhong = false;
-    OTextNhap oMaPhongMoi, oGiaPhongMoi, oNgayDuaMoi;
+    OTextNhap oMaPhongMoi, oNgayDuaMoi; // gia phong tu dong theo loai, khong nhap tay
     int loaiPhongChonIdx = 0; // 0: DON, 1: DOI, 2: SUITE, 3: VIP
     HopXacNhan hopXoaPhong;
 

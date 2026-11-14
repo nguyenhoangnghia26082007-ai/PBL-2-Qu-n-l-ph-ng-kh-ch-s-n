@@ -48,6 +48,8 @@ struct ChiTietPhongHienThi {
     bool coKhach = false;
     std::string maLT, maKH, tenKhach, sdtKhach, cccdKhach;
     Date ngayNhan;
+    bool coNgayTraDuKien = false;
+    Date ngayTraDuKien;
     int soDemTamTinh = 0;
     long long tienPhongTamTinh = 0, tienDichVuTamTinh = 0, tongTienTamTinh = 0;
     std::vector<DichVuDaDungItem> dsDichVu;
@@ -116,6 +118,13 @@ struct DoanhThuLoaiPhongHienThi {
     float phanTram = 0.0f;
 };
 
+// Doanh thu cua 1 ky (thang hoac quy) trong nam, tinh theo ngay lap hoa don
+struct DoanhThuKyHienThi {
+    std::string nhan;         // "T1".."T12" hoac "Q1".."Q4"
+    long long doanhThu = 0;   // chua VAT, bo hoa don da huy
+    int soHoaDon = 0;
+};
+
 struct ThongKeDoanhThuChiTiet {
     long long tongDoanhThu = 0;
     long long thucThuHomNay = 0;
@@ -137,11 +146,17 @@ public:
 
     // ---- Nghiep vu So do phong & Nhan / Tra phong (Buoc 2) ----
     KetQua chiTietPhong(const std::string& maPhong, ChiTietPhongHienThi& kq) const;
-    KetQua nhanPhong(const std::string& maPhong, const std::string& maKH, const std::string& ngayNhanStr);
+    // ngayTraDuKienStr: khong bat buoc (rong = chua xac dinh ngay tra)
+    KetQua nhanPhong(const std::string& maPhong, const std::string& maKH, const std::string& ngayNhanStr,
+                     const std::string& ngayTraDuKienStr = "");
     KetQua themDichVuChoPhong(const std::string& maPhong, const std::string& maDV, double soLuong);
     KetQua traPhong(const std::string& maPhong, const std::string& ngayTraStr, std::string& maHDMoi);
     KetQua doiBaoTri(const std::string& maPhong, bool bat);
     KetQua themPhong(const std::string& loai, const std::string& maPhong, long long giaCoBan, const std::string& ngayDuaStr);
+    // Tao phong voi gia co ban co dinh theo loai phong
+    KetQua themPhong(const std::string& loai, const std::string& maPhong, const std::string& ngayDuaStr);
+    // Gia co ban va gia thue/dem thuc te (da gom phu phi loai phong) cua mot loai phong
+    KetQua giaPhongTheoLoai(const std::string& loai, long long& giaCoBan, long long& donGiaDem) const;
     KetQua xoaPhong(const std::string& maPhong);
 
     KetQua danhSachDichVu(std::vector<DichVuMenuHienThi>& kq) const;
@@ -163,6 +178,8 @@ public:
     KetQua huyHoaDon(const std::string& maHD);
     KetQua xuatHoaDonTxt(const std::string& maHD, std::string& noiDungFile) const;
     KetQua thongKeBaoCaoDoanhThu(ThongKeDoanhThuChiTiet& kq) const;
+    // Doanh thu theo 12 thang (theoQuy = false) hoac 4 quy (theoQuy = true) cua mot nam
+    KetQua thongKeDoanhThuTheoKy(int nam, bool theoQuy, std::vector<DoanhThuKyHienThi>& kq, long long& tongNam) const;
 
     // ---- Quan ly nhan vien (chi QUAN_LY) ----
     KetQua danhSachNhanVien(std::vector<NhanVienHienThi>& kq) const;

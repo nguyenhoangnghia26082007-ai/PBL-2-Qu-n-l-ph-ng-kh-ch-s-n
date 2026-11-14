@@ -40,3 +40,9 @@ long long LuotThue::tienDichVu() const {
     for (auto& x : dichVu) s += x.getThanhTien();
     return s;
 }
+
+bool LuotThue::datNgayTraDuKien(Date ngay) {
+    if (daTra_ || ngay - ngayNhan < 0) return false;
+    ngayTra = ngay;
+    return true;
+}

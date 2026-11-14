@@ -146,9 +146,10 @@ void CustomerScreen::Draw(Rectangle vung) {
 
         // Huy hieu hang thanh vien
         Color mH = mauHang(k.hang);
-        Rectangle rH = {c4, yDong + 11, std::min(wB * 0.16f, 95.0f), 26};
-        DrawRectangleRounded(rH, 1.0f, 6, Fade(mH, 0.12f));
-        Theme::ChuGiua(k.tenHang, rH, Theme::CO_NHO - 2, mH, true);
+        std::string nhanHang = Widgets::nhanHienThi(k.tenHang);
+        float rongH = std::min(dauBang.x + wB - c4 - 8, Widgets::rongBadge(nhanHang, Theme::CO_NHO - 2, 10));
+        Rectangle rH = {c4, yDong + 11, rongH, 26};
+        DrawBadge(nhanHang, rH, mH, Theme::CO_NHO - 2, 10);
 
         if (hover && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) chonKhach(i);
         yDong += 52;
@@ -172,7 +173,7 @@ void CustomerScreen::Draw(Rectangle vung) {
         DrawRectangleRounded(rHangThe, 0.15f, 6, Fade(mauHang(k.hang), 0.10f));
         DrawRectangleRoundedLinesEx(rHangThe, 0.15f, 6, 1.2f, mauHang(k.hang));
 
-        Theme::Chu("Hạng: " + k.tenHang + " (" + std::to_string(k.diem) + " điểm tích lũy)",
+        Theme::Chu("Hạng: " + Widgets::nhanHienThi(k.tenHang) + " (" + std::to_string(k.diem) + " điểm tích lũy)",
                    rHangThe.x + 12, rHangThe.y + 10, Theme::CO_NHO + 1, mauHang(k.hang), true);
         Theme::Chu("Ưu đãi giảm giá tiền phòng: -" + std::to_string(k.phanTramGiam) + "%",
                    rHangThe.x + 12, rHangThe.y + 32, Theme::CO_NHO, Theme::CHU);

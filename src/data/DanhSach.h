@@ -97,6 +97,7 @@ public:
     bool themCuoi(Phong* p);
     bool chenTaiViTri(int viTri, Phong* p);
     bool xoaTheoMa(const std::string& ma);
+    void sapXepTheoMa(bool tangDan = true);
     void sapXepTheoDonGia(bool tangDan);
     void hienThi() const;
     int getSoLuong() const { return dsPhong.size(); }

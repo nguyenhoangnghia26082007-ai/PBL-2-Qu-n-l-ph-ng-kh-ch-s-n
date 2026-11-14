@@ -116,3 +116,11 @@ Phong* PhongFactory::taoPhong(const std::string& loai, const std::string& ma, lo
     if (p) p->datNgayDua(ngayDua);
     return p;
 }
+
+long long PhongFactory::giaCoBanMacDinh(const std::string& loai) {
+    if (loai == "DON") return 400000;
+    if (loai == "DOI") return 600000;
+    if (loai == "SUITE") return 1200000;
+    if (loai == "VIP") return 2000000;
+    return 0;
+}

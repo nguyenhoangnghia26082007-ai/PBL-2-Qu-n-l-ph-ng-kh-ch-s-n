@@ -235,6 +235,7 @@ bool LuuTru::tai(KhachSanData& a) {
         cho.push_back({ph, tt, ngay});
         return true;
     });
+    a.dsPhong.sapXepTheoMa(true);
 
     // 5) luot thue + dich vu da dung
     std::map<std::string, LuotThue*> theoMaLT;

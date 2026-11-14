@@ -22,6 +22,9 @@ public:
     long long dong(Date ngay);
     // Khoi phuc tu file (khong kiem tra nghiep vu)
     void khoiPhucTra(Date ngay, bool tra);
+    // Ngay tra du kien: chi dat khi chua tra phong (luu chung cot ngayTra trong file, daTra = 0)
+    bool datNgayTraDuKien(Date ngay);
+    Date getNgayTraDuKien() const { return daTra_ ? Date() : ngayTra; }
     void themDichVuDaCo(const DichVu& dv, double soLuong, Date ngay, long long thanhTien);
     int soDem() const;
     long long tienPhong() const;

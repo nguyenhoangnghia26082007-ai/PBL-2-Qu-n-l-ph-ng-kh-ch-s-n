@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "PhanQuyen.h"
 #include "Theme.h"
+#include "Widgets.h"
 
 namespace {
 std::string vietHoa(std::string s) {
@@ -129,11 +130,13 @@ void InvoiceScreen::Draw(Rectangle vung) {
 
     float wB = dauBang.width;
     float c0 = dauBang.x + 8;
-    float c1 = dauBang.x + wB * 0.15f;
-    float c2 = dauBang.x + wB * 0.27f;
-    float c3 = dauBang.x + wB * 0.51f;
-    float c4 = dauBang.x + wB * 0.68f;
-    float c5 = dauBang.x + wB * 0.84f;
+    // Cot "Trang thai" rong hon (24%) de chua nhan tieng Viet "Chưa thanh toán"
+    float c1 = dauBang.x + wB * 0.12f;
+    float c2 = dauBang.x + wB * 0.22f;
+    float c3 = dauBang.x + wB * 0.42f;
+    float c4 = dauBang.x + wB * 0.56f;
+    float c5 = dauBang.x + wB * 0.76f;
+    float rongCotTT = dauBang.x + wB - c5 - 8;
 
     Theme::Chu("Mã HĐ",    c0, yBang + 10, Theme::CO_NHO, Theme::CHU_PHU, true);
     Theme::Chu("Phòng",    c1, yBang + 10, Theme::CO_NHO, Theme::CHU_PHU, true);
@@ -161,14 +164,15 @@ void InvoiceScreen::Draw(Rectangle vung) {
         Theme::Chu(hd.maPhong, c1, yDong + 14, Theme::CO_NHO + 1, Theme::CHINH, true);
         Theme::Chu(Theme::CatChu(hd.tenKhach, (c3 - c2 - 8), Theme::CO_NHO), c2, yDong + 14, Theme::CO_NHO, Theme::CHU);
         Theme::Chu(hd.ngayLap.str(), c3, yDong + 14, Theme::CO_NHO - 1, Theme::CHU_PHU);
-        Theme::Chu(dinhDangTien(hd.tongCong), c4, yDong + 14, Theme::CO_NHO, Theme::CHU, true);
+        Theme::Chu(Theme::CatChu(dinhDangTien(hd.tongCong), c5 - c4 - 6, Theme::CO_NHO - 1, true), c4, yDong + 15,
+                   Theme::CO_NHO - 1, Theme::CHU, true);
 
-        // Huy hieu trang thai gon gang
+        // Huy hieu trang thai: nhan tieng Viet, rong theo do chu + dem 2 ben, can giua
         Color mTT = mauTrangThaiHD(hd.trangThai);
-        float rTTW = std::max(60.0f, wB * 0.15f - 8);
+        std::string nhanTT = Widgets::nhanHienThi(hd.tenTrangThai);
+        float rTTW = std::min(rongCotTT, Widgets::rongBadge(nhanTT, Theme::CO_NHO - 2, 10));
         Rectangle rTT = {c5, yDong + 11, rTTW, 26};
-        DrawRectangleRounded(rTT, 1.0f, 6, Fade(mTT, 0.12f));
-        Theme::ChuGiua(hd.tenTrangThai, rTT, Theme::CO_NHO - 2, mTT, true);
+        DrawBadge(nhanTT, rTT, mTT, Theme::CO_NHO - 2, 10);
 
         if (hover && IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) chonHoaDon(hd.maHD);
         yDong += 52;
@@ -186,21 +190,31 @@ void InvoiceScreen::Draw(Rectangle vung) {
         Theme::Chu("Chi tiết hóa đơn", ix, iy, Theme::CO_VUA, Theme::CHU, true);
         Theme::Chu("Bấm chọn 1 hóa đơn bên trái để xem phiếu và thu tiền.", ix, iy + 36, Theme::CO_THUONG, Theme::CHU_PHU);
     } else {
-        // Tieu de to bien lai
-        Theme::Chu("HÓA ĐƠN THANH TOÁN", ix, iy, Theme::CO_LON, Theme::CHU, true);
-        Theme::Chu(chiTiet.maHD + " • Phòng " + chiTiet.maPhong, ix, iy + 36, Theme::CO_NHO + 2, Theme::CHINH, true);
+        // Tieu de to bien lai: thu nho co chu neu khong vua chieu rong panel
+        const std::string tieuDe = "HÓA ĐƠN THANH TOÁN";
+        int coTD = Theme::CO_LON;
+        while (coTD > Theme::CO_NHO + 4 && Theme::DoChu(tieuDe, coTD, true).x > iw) --coTD;
+        float rongTD = Theme::DoChu(tieuDe, coTD, true).x;
+        Theme::Chu(tieuDe, ix, iy, coTD, Theme::CHU, true);
 
+        // Huy hieu trang thai: cung dong tieu de neu du cho, neu khong thi xuong dong 2 (can phai)
         Color mTT = mauTrangThaiHD(chiTiet.trangThai);
-        Vector2 kt = Theme::DoChu(chiTiet.tenTrangThai, Theme::CO_NHO + 1, true);
-        Rectangle rH = {ix + iw - kt.x - 24, iy + 4, kt.x + 24, 30};
-        DrawRectangleRounded(rH, 1.0f, 6, Fade(mTT, 0.12f));
-        Theme::ChuGiua(chiTiet.tenTrangThai, rH, Theme::CO_NHO + 1, mTT, true);
+        std::string nhanTT = Widgets::nhanHienThi(chiTiet.tenTrangThai);
+        float rongH = std::min(iw, Widgets::rongBadge(nhanTT, Theme::CO_NHO, 12));
+        bool cungDong = (rongTD + 16 + rongH <= iw);
+        Rectangle rH = {ix + iw - rongH, cungDong ? iy + 1 : iy + 33, rongH, 28};
+        DrawBadge(nhanTT, rH, mTT, Theme::CO_NHO, 12);
+
+        std::string dong2 = chiTiet.maHD + " • Phòng " + chiTiet.maPhong;
+        float rongD2 = cungDong ? iw : (iw - rongH - 12);
+        Theme::Chu(Theme::CatChu(dong2, rongD2, Theme::CO_NHO + 2, true), ix, iy + 36, Theme::CO_NHO + 2, Theme::CHINH, true);
 
         DrawLine((int)ix, (int)iy + 68, (int)(ix + iw), (int)iy + 68, Theme::VIEN);
         float py = iy + 76;
 
         // Thong tin khach & phong
-        Theme::Chu("Khách hàng: " + chiTiet.tenKhach + " (" + chiTiet.tenHangKhach + ")", ix, py, Theme::CO_NHO + 1, Theme::CHU, true);
+        Theme::Chu(Theme::CatChu("Khách hàng: " + chiTiet.tenKhach + " (" + Widgets::nhanHienThi(chiTiet.tenHangKhach) + ")",
+                                 iw, Theme::CO_NHO + 1, true), ix, py, Theme::CO_NHO + 1, Theme::CHU, true);
         Theme::Chu("Thời gian: " + chiTiet.ngayNhan.str() + " → " + chiTiet.ngayTra.str() + " (" + std::to_string(chiTiet.soDem) + " đêm)",
                    ix, py + 22, Theme::CO_NHO, Theme::CHU_PHU);
         Theme::Chu("Nhân viên lập: " + chiTiet.tenNVLap + " • Ngày: " + chiTiet.ngayLap.str(), ix, py + 42, Theme::CO_NHO - 1, Theme::CHU_PHU);
@@ -222,7 +236,9 @@ void InvoiceScreen::Draw(Rectangle vung) {
 
         ry += 24;
         Theme::Chu("Giảm giá thành viên:", rBangTien.x + 12, ry, Theme::CO_NHO + 1, Theme::CHU_PHU);
-        Theme::Chu("-" + dinhDangTien(chiTiet.giamGia), rBangTien.x + rBangTien.width - 150, ry, Theme::CO_NHO + 1, Theme::THANH_CONG, true);
+        // Chi them dau "-" khi thuc su co giam gia
+        std::string chuGiam = chiTiet.giamGia > 0 ? "-" + dinhDangTien(chiTiet.giamGia) : dinhDangTien(0);
+        Theme::Chu(chuGiam, rBangTien.x + rBangTien.width - 150, ry, Theme::CO_NHO + 1, Theme::THANH_CONG, true);
 
         ry += 24;
         Theme::Chu("Thuế VAT (10%):", rBangTien.x + 12, ry, Theme::CO_NHO + 1, Theme::CHU_PHU);
@@ -236,11 +252,17 @@ void InvoiceScreen::Draw(Rectangle vung) {
 
         py += 152;
 
-        // Da thu & Con lai
-        Theme::Chu("Đã thanh toán: " + dinhDangTien(chiTiet.daThanhToan), ix, py, Theme::CO_NHO + 1, Theme::THANH_CONG, true);
-        Theme::Chu("CÒN PHẢI TRẢ: " + dinhDangTien(chiTiet.conPhaiTra), ix + iw - 200, py, Theme::CO_NHO + 1, chiTiet.conPhaiTra > 0 ? Theme::LOI : Theme::THANH_CONG, true);
+        // Da thu & Con lai: 2 dong rieng, nhan ben trai - so tien can phai (khong bao gio de nhau)
+        {
+            Color mauCon = chiTiet.conPhaiTra > 0 ? Theme::LOI : Theme::THANH_CONG;
+            std::string tienDa = dinhDangTien(chiTiet.daThanhToan), tienCon = dinhDangTien(chiTiet.conPhaiTra);
+            Theme::Chu("Đã thanh toán:", ix + 12, py, Theme::CO_NHO + 1, Theme::THANH_CONG, true);
+            Theme::Chu(tienDa, ix + iw - 12 - Theme::DoChu(tienDa, Theme::CO_NHO + 1, true).x, py, Theme::CO_NHO + 1, Theme::THANH_CONG, true);
+            Theme::Chu("CÒN PHẢI TRẢ:", ix + 12, py + 24, Theme::CO_NHO + 1, mauCon, true);
+            Theme::Chu(tienCon, ix + iw - 12 - Theme::DoChu(tienCon, Theme::CO_NHO + 1, true).x, py + 24, Theme::CO_NHO + 1, mauCon, true);
+        }
 
-        py += 30;
+        py += 54;
 
         // ---------------------------------------------------------------------
         // FORM THU TIEN HOAC THONG TIN DA HOAN TAT

@@ -89,6 +89,8 @@ public:
     using Creator = std::function<Phong*(const std::string&, long long)>;
     static void dangKy(const std::string& loai, Creator c);
     static Phong* taoPhong(const std::string& loai, const std::string& ma, long long gia, Date ngayDua = Date());
+    // Gia co ban co dinh theo loai phong (0 neu loai khong hop le)
+    static long long giaCoBanMacDinh(const std::string& loai);
 private:
     static std::map<std::string, Creator>& registry();
     static void macDinh();

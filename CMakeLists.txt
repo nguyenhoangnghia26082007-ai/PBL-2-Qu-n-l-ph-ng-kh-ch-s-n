@@ -91,3 +91,28 @@ add_custom_command(TARGET QuanLyKhachSanGUI POST_BUILD
         "${CMAKE_SOURCE_DIR}/assets"
         "$<TARGET_FILE_DIR:QuanLyKhachSanGUI>/assets"
 )
+
+# 4. Target chay test case kiem thu toan bo he thong
+set(TEST_SOURCES
+    test.cpp
+    src/data/Common.cpp
+    src/data/DanhSach.cpp
+    src/data/DichVu.cpp
+    src/data/HoaDon.cpp
+    src/data/KhachHang.cpp
+    src/data/LuotThue.cpp
+    src/data/NhanVien.cpp
+    src/data/Phong.cpp
+    src/data/KhachSanData.cpp
+    src/data/LuuTru.cpp
+    src/data/TaiKhoan.cpp
+    src/service/PhanQuyen.cpp
+    src/service/AuthService.cpp
+    src/service/KhachSanService.cpp
+)
+add_executable(KiemThu ${TEST_SOURCES})
+target_include_directories(KiemThu PRIVATE
+    src
+    src/data
+    src/service
+)

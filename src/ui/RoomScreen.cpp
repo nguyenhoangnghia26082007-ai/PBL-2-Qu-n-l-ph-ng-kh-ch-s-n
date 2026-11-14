@@ -19,6 +19,8 @@ RoomScreen::RoomScreen(AuthService& a, KhachSanService& s) : auth(a), service(s)
     oTimKiem.toiDa = 16;
 
     oNgayNhan.toiDa = 12;
+    oNgayTraDuKien.toiDa = 12;
+    oNgayTraDuKien.goiY = "dd/mm/yyyy (tùy chọn)";
     oNgayTra.toiDa = 12;
 
     oTimKhach.goiY = "Tìm theo tên, SĐT, CCCD...";
@@ -29,9 +31,6 @@ RoomScreen::RoomScreen(AuthService& a, KhachSanService& s) : auth(a), service(s)
 
     oMaPhongMoi.goiY = "VD: P202";
     oMaPhongMoi.toiDa = 12;
-    oGiaPhongMoi.goiY = "Đơn giá (VD: 500 000)";
-    oGiaPhongMoi.toiDa = 12;
-    oGiaPhongMoi.chiNhapTien = true;
     oNgayDuaMoi.toiDa = 12;
 }
 
@@ -65,7 +64,9 @@ void RoomScreen::chonPhong(const std::string& ma) {
     if (!kq.ok) { maPhongChon.clear(); return; }
 
     oNgayNhan.giaTri = Date::homNay().str();
-    oNgayTra.giaTri = Date::homNay().str();
+    oNgayTraDuKien.giaTri.clear();
+    // Neu luc nhan phong da ghi ngay tra du kien thi dien san vao o ngay tra
+    oNgayTra.giaTri = chiTiet.coNgayTraDuKien ? chiTiet.ngayTraDuKien.str() : Date::homNay().str();
     oSoLuongDV.giaTri = "1";
     if (!dsKhach.empty() && maKhachNhan.empty()) {
         maKhachNhan = dsKhach.front().ma;
@@ -110,7 +111,6 @@ void RoomScreen::Draw(Rectangle vung) {
         if (VeNut(nutThem, "+ Thêm phòng", KieuNut::CHINH, true, Theme::CO_NHO)) {
             moModalThemPhong = true;
             oMaPhongMoi.giaTri.clear();
-            oGiaPhongMoi.giaTri.clear();
             oNgayDuaMoi.giaTri = Date::homNay().str();
             loaiPhongChonIdx = 0;
         }
@@ -200,10 +200,9 @@ void RoomScreen::Draw(Rectangle vung) {
 
         std::string tenTT = LuoiPhong::tenTrangThai(chiTiet.tinhTrang);
         Color mauTT = LuoiPhong::mauTrangThai(chiTiet.tinhTrang);
-        Vector2 ktTT = Theme::DoChu(tenTT, Theme::CO_NHO + 1, true);
-        Rectangle rHuyHieu = {px + pw - ktTT.x - 22, py + 4, ktTT.x + 22, 30};
-        DrawRectangleRounded(rHuyHieu, 1.0f, 8, Fade(mauTT, 0.14f));
-        Theme::ChuGiua(tenTT, rHuyHieu, Theme::CO_NHO + 1, mauTT, true);
+        float rongHH = Widgets::rongBadge(tenTT, Theme::CO_NHO + 1, 11);
+        Rectangle rHuyHieu = {px + pw - rongHH, py + 4, rongHH, 30};
+        DrawBadge(tenTT, rHuyHieu, mauTT, Theme::CO_NHO + 1, 11);
 
         DrawLine((int)px, (int)py + 68, (int)(px + pw), (int)py + 68, Theme::VIEN);
         float cy = py + 78;
@@ -229,13 +228,16 @@ void RoomScreen::Draw(Rectangle vung) {
             }
 
             cy += 46;
-            Theme::Chu("Ngày nhận phòng (dd/mm/yyyy):", px, cy, Theme::CO_NHO, Theme::CHU_PHU, true);
+            float rongNgay = (pw - 10) / 2.0f;
+            Theme::Chu("Ngày nhận phòng:", px, cy, Theme::CO_NHO, Theme::CHU_PHU, true);
+            Theme::Chu("Ngày trả dự kiến:", px + rongNgay + 10, cy, Theme::CO_NHO, Theme::CHU_PHU, true);
             cy += 22;
-            VeOTextNhap({px, cy, pw, 36}, oNgayNhan);
+            VeOTextNhap({px, cy, rongNgay, 36}, oNgayNhan);
+            VeOTextNhap({px + rongNgay + 10, cy, rongNgay, 36}, oNgayTraDuKien);
 
             cy += 48;
             if (VeNut({px, cy, pw, 44}, "Xác nhận nhận phòng", KieuNut::CHINH, !maKhachNhan.empty(), Theme::CO_THUONG)) {
-                KetQua kq = service.nhanPhong(chiTiet.ma, maKhachNhan, oNgayNhan.giaTri);
+                KetQua kq = service.nhanPhong(chiTiet.ma, maKhachNhan, oNgayNhan.giaTri, oNgayTraDuKien.giaTri);
                 ThongBao::hien(kq.thongBao, kq.ok ? ThongBao::Loai::THANH_CONG : ThongBao::Loai::LOI);
                 if (kq.ok) taiLaiDuLieu();
             }
@@ -274,8 +276,10 @@ void RoomScreen::Draw(Rectangle vung) {
             Theme::Chu("Khách: " + chiTiet.tenKhach, rKhachInfo.x + 12, rKhachInfo.y + 10, Theme::CO_THUONG, Theme::CHU, true);
             Theme::Chu("SĐT: " + (chiTiet.sdtKhach.empty() ? "—" : chiTiet.sdtKhach) + " • CCCD: " + chiTiet.cccdKhach,
                        rKhachInfo.x + 12, rKhachInfo.y + 32, Theme::CO_NHO - 1, Theme::CHU_PHU);
-            Theme::Chu("Ngày nhận: " + chiTiet.ngayNhan.str() + " (" + std::to_string(chiTiet.soDemTamTinh) + " đêm)",
-                       rKhachInfo.x + 12, rKhachInfo.y + 54, Theme::CO_NHO, Theme::CHINH, true);
+            std::string dongNgay = "Nhận: " + chiTiet.ngayNhan.str() + " (" + std::to_string(chiTiet.soDemTamTinh) + " đêm)";
+            if (chiTiet.coNgayTraDuKien) dongNgay += " • Dự kiến trả: " + chiTiet.ngayTraDuKien.str();
+            Theme::Chu(Theme::CatChu(dongNgay, rKhachInfo.width - 24, Theme::CO_NHO), rKhachInfo.x + 12, rKhachInfo.y + 54,
+                       Theme::CO_NHO, Theme::CHINH, true);
 
             cy += 92;
 
@@ -449,8 +453,17 @@ void RoomScreen::Draw(Rectangle vung) {
         }
 
         my += 68;
-        Theme::Chu("Giá cơ bản (VND/đêm):", hop.x + 24, my, Theme::CO_NHO + 1, Theme::CHU_PHU, true);
-        VeOTextNhap({hop.x + 24, my + 22, hop.width - 48, 38}, oGiaPhongMoi);
+        // Gia phong co dinh theo loai: chi hien thi, khong cho nhap tay
+        long long giaCoBan = 0, giaDem = 0;
+        service.giaPhongTheoLoai(dsLoai[loaiPhongChonIdx], giaCoBan, giaDem);
+        Theme::Chu("Giá phòng (tự động theo loại):", hop.x + 24, my, Theme::CO_NHO + 1, Theme::CHU_PHU, true);
+        Rectangle rGia = {hop.x + 24, my + 22, hop.width - 48, 38};
+        DrawRectangleRounded(rGia, Widgets::boGoc(rGia, 10), 10, Color{241, 245, 249, 255});
+        DrawRectangleRoundedLinesEx(rGia, Widgets::boGoc(rGia, 10), 10, 1.2f, Theme::VIEN);
+        std::string chuGia = dinhDangTien(giaDem) + "/đêm";
+        if (giaDem != giaCoBan) chuGia += "  (cơ bản " + dinhDangTien(giaCoBan) + ")";
+        Theme::Chu(Theme::CatChu(chuGia, rGia.width - 28, Theme::CO_NHO + 1), rGia.x + 14, rGia.y + 10,
+                   Theme::CO_NHO + 1, Theme::CHU, true);
 
         my += 68;
         Theme::Chu("Ngày đưa vào sử dụng (dd/mm/yyyy):", hop.x + 24, my, Theme::CO_NHO + 1, Theme::CHU_PHU, true);
@@ -462,8 +475,7 @@ void RoomScreen::Draw(Rectangle vung) {
 
         if (VeNut(nutHuy, "Hủy", KieuNut::PHU)) moModalThemPhong = false;
         if (VeNut(nutXacNhan, "Tạo phòng", KieuNut::CHINH)) {
-            long long gia = Widgets::layGiaTriTien(oGiaPhongMoi.giaTri);
-            KetQua kq = service.themPhong(dsLoai[loaiPhongChonIdx], oMaPhongMoi.giaTri, gia, oNgayDuaMoi.giaTri);
+            KetQua kq = service.themPhong(dsLoai[loaiPhongChonIdx], oMaPhongMoi.giaTri, oNgayDuaMoi.giaTri);
             ThongBao::hien(kq.thongBao, kq.ok ? ThongBao::Loai::THANH_CONG : ThongBao::Loai::LOI);
             if (kq.ok) {
                 moModalThemPhong = false;

@@ -18,8 +18,10 @@ public:
     const std::string& getHoTen() const { return hoTen; }
     ChucVu getChucVu() const { return chucVu; }
     int getSoHoaDonDaLap() const { return soHoaDonDaLap; }
-    // Phan quyen theo chuc vu
-    bool coTheThuTien() const { return chucVu == ChucVu::THU_NGAN || chucVu == ChucVu::QUAN_LY; }
+    // Phan quyen theo chuc vu (Le tan, Thu ngan, Quan ly deu co the thu tien khach)
+    bool coTheThuTien() const {
+        return chucVu == ChucVu::THU_NGAN || chucVu == ChucVu::QUAN_LY || chucVu == ChucVu::LE_TAN;
+    }
     bool coTheHuyHoaDon() const { return chucVu == ChucVu::QUAN_LY; }
     const std::string& getCCCD() const { return cccd; }
     const std::string& getSDT() const { return soDienThoai; }

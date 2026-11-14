@@ -13,6 +13,7 @@ class AccountScreen : public ManHinhCoSo {
     OTextNhap oTenDN, oMatKhau, oHoTen, oMaNV;
     VaiTro vaiTroChon = VaiTro::LE_TAN;
     HopXacNhan hopXoa;
+    bool hienMatKhau = false; // false: che mat khau bang dau * (bam "Hiện" de xem)
 
     void taiLai();
     void chonTaiKhoan(int idx);

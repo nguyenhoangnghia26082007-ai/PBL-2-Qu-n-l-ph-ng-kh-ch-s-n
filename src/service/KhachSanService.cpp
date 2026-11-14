@@ -95,9 +95,11 @@ KetQua KhachSanService::chiTietPhong(const std::string& maPhong, ChiTietPhongHie
         kq.sdtKhach = lt->getKhach()->getSDT();
         kq.cccdKhach = lt->getKhach()->getCCCD();
         kq.ngayNhan = lt->getNgayNhan();
+        Date duKien = lt->getNgayTraDuKien();
+        if (!duKien.laMacDinh()) { kq.coNgayTraDuKien = true; kq.ngayTraDuKien = duKien; }
 
-        Date homNay = Date::homNay();
-        long long dem = homNay - lt->getNgayNhan();
+        Date mocTinh = kq.coNgayTraDuKien ? kq.ngayTraDuKien : Date::homNay();
+        long long dem = mocTinh - lt->getNgayNhan();
         if (dem <= 0) dem = 1;
         kq.soDemTamTinh = (int)dem;
         kq.tienPhongTamTinh = dem * lt->getDonGiaChot();
@@ -117,7 +119,8 @@ KetQua KhachSanService::chiTietPhong(const std::string& maPhong, ChiTietPhongHie
     return KetQua::Ok();
 }
 
-KetQua KhachSanService::nhanPhong(const std::string& maPhong, const std::string& maKH, const std::string& ngayNhanStr) {
+KetQua KhachSanService::nhanPhong(const std::string& maPhong, const std::string& maKH, const std::string& ngayNhanStr,
+                                  const std::string& ngayTraDuKienStr) {
     KetQua q = auth.yeuCau(Quyen::NHAN_TRA_PHONG);
     if (!q) return q;
 
@@ -132,11 +135,25 @@ KetQua KhachSanService::nhanPhong(const std::string& maPhong, const std::string&
     Date ngayNhan;
     if (!tachNgay(ngayNhanStr, ngayNhan)) return KetQua::Loi("Ngày nhận phòng không hợp lệ (dd/mm/yyyy).");
 
+    Date ngayTraDuKien;
+    bool coNgayTra = ngayTraDuKienStr.find_first_not_of(" \t") != std::string::npos;
+    if (coNgayTra) {
+        if (!tachNgay(ngayTraDuKienStr, ngayTraDuKien))
+            return KetQua::Loi("Ngày trả dự kiến không hợp lệ (dd/mm/yyyy).");
+        if (ngayTraDuKien - ngayNhan < 0)
+            return KetQua::Loi("Ngày trả dự kiến không được trước ngày nhận phòng.");
+    }
+
     if (!p->nhanPhong(kh, ngayNhan))
         return KetQua::Loi("Không thể nhận phòng lúc này.");
+    if (coNgayTra) {
+        if (LuotThue* lt = p->getLuotThueHienTai()) lt->datNgayTraDuKien(ngayTraDuKien);
+    }
 
     luu();
-    return KetQua::Ok("Phòng " + p->getMa() + " đã được nhận thành công cho khách " + kh->getHoTen() + ".");
+    std::string tb = "Phòng " + p->getMa() + " đã được nhận thành công cho khách " + kh->getHoTen() + ".";
+    if (coNgayTra) tb += " Dự kiến trả: " + ngayTraDuKien.str() + ".";
+    return KetQua::Ok(tb);
 }
 
 KetQua KhachSanService::themDichVuChoPhong(const std::string& maPhong, const std::string& maDV, double soLuong) {
@@ -199,7 +216,7 @@ KetQua KhachSanService::doiBaoTri(const std::string& maPhong, bool bat) {
 
     if (!p->baoTri(bat)) {
         return KetQua::Loi(bat ? "Chỉ phòng TRỐNG mới có thể chuyển sang BẢO TRÌ."
-                               : "Phòng hiện không ở trạng thái BẢO TRÌ.");
+                                : "Phòng hiện không ở trạng thái BẢO TRÌ.");
     }
 
     luu();
@@ -227,9 +244,28 @@ KetQua KhachSanService::themPhong(const std::string& loai, const std::string& ma
         delete p;
         return KetQua::Loi("Không thể thêm phòng vào danh sách.");
     }
+    data.dsPhong.sapXepTheoMa(true);
 
     luu();
     return KetQua::Ok("Đã thêm thành công phòng " + m + " (" + l + ").");
+}
+
+KetQua KhachSanService::themPhong(const std::string& loai, const std::string& maPhong, const std::string& ngayDuaStr) {
+    long long gia = PhongFactory::giaCoBanMacDinh(chuanMa(loai));
+    if (gia <= 0) return KetQua::Loi("Loại phòng không hợp lệ (DON / DOI / SUITE / VIP).");
+    return themPhong(loai, maPhong, gia, ngayDuaStr);
+}
+
+KetQua KhachSanService::giaPhongTheoLoai(const std::string& loai, long long& giaCoBan, long long& donGiaDem) const {
+    std::string l = chuanMa(loai);
+    giaCoBan = PhongFactory::giaCoBanMacDinh(l);
+    donGiaDem = 0;
+    if (giaCoBan <= 0) return KetQua::Loi("Loại phòng không hợp lệ (DON / DOI / SUITE / VIP).");
+    Phong* tam = PhongFactory::taoPhong(l, "TAM", giaCoBan);
+    if (!tam) return KetQua::Loi("Loại phòng không hợp lệ (DON / DOI / SUITE / VIP).");
+    donGiaDem = tam->tinhDonGia();
+    delete tam;
+    return KetQua::Ok();
 }
 
 KetQua KhachSanService::xoaPhong(const std::string& maPhong) {
@@ -242,9 +278,12 @@ KetQua KhachSanService::xoaPhong(const std::string& maPhong) {
 
     // Kiem tra da co hoa don chua
     for (HoaDon* h : data.qlHoaDon.tatCa()) {
-        if (h->getLuotThue()->getMaPhong() == m)
+        if (h->getLuotThue() && h->getLuotThue()->getMaPhong() == m)
             return KetQua::Loi("Không thể xóa phòng " + m + " vì đã có lịch sử hóa đơn thanh toán.");
     }
+
+    if (p->getSoLuotThue() > 0)
+        return KetQua::Loi("Không thể xóa phòng " + m + " vì phòng đã có lịch sử lượt thuê.");
 
     if (!data.dsPhong.xoaTheoMa(m))
         return KetQua::Loi("Không thể xóa phòng (phòng đang có khách hoặc không tồn tại).");
@@ -338,7 +377,7 @@ KetQua KhachSanService::xoaKhachHang(const std::string& ma) {
     // Kiem tra xem khach da co phong dang o hoac lich su hoa don khong
     for (Phong* p : data.dsPhong.tatCa()) {
         for (LuotThue* lt : p->getLichSu()) {
-            if (lt->getKhach()->getMa() == m)
+            if (lt && lt->getKhach() && lt->getKhach()->getMa() == m)
                 return KetQua::Loi("Không thể xóa: Khách hàng " + m + " đã có lịch sử thuê phòng.");
         }
     }
@@ -448,11 +487,15 @@ KetQua KhachSanService::thanhToanHoaDon(const std::string& maHD, long long soTie
     if (soTien <= 0 || soTien > hd->conPhaiTra())
         return KetQua::Loi("Số tiền thanh toán không hợp lệ (tối đa: " + dinhDangTien(hd->conPhaiTra()) + ").");
 
-    // Tim nhan vien thu tien
+    // Tim nhan vien thu tien (uu tien theo phien dang nhap, neu thieu quyen thu tien thi tim nhan vien hop le trong he thong)
     std::string maNV = auth.phienHienTai().maNV;
     NhanVien* nv = data.timNhanVien(maNV);
-    if (!nv && !data.dsNhanVien.empty()) nv = data.dsNhanVien.front().get();
-    if (!nv) return KetQua::Loi("Không tìm thấy thông tin nhân viên thu tiền.");
+    if (!nv || !nv->coTheThuTien()) {
+        for (const auto& n : data.dsNhanVien) {
+            if (n->coTheThuTien()) { nv = n.get(); break; }
+        }
+    }
+    if (!nv || !nv->coTheThuTien()) return KetQua::Loi("Không tìm thấy thông tin nhân viên có quyền thu tiền.");
 
     Date ngay;
     if (!tachNgay(ngayStr, ngay)) return KetQua::Loi("Ngày thanh toán không hợp lệ.");
@@ -477,9 +520,16 @@ KetQua KhachSanService::huyHoaDon(const std::string& maHD) {
     HoaDon* hd = data.qlHoaDon.timTheoMa(chuanMa(maHD));
     if (!hd) return KetQua::Loi("Không tìm thấy hóa đơn " + maHD);
 
+    // Tim nhan vien chuc vu Quan ly de ky huy hoa don
     std::string maNV = auth.phienHienTai().maNV;
     NhanVien* nv = data.timNhanVien(maNV);
-    if (!nv && !data.dsNhanVien.empty()) nv = data.dsNhanVien.front().get();
+    if (!nv || !nv->coTheHuyHoaDon()) {
+        for (const auto& n : data.dsNhanVien) {
+            if (n->coTheHuyHoaDon()) { nv = n.get(); break; }
+        }
+    }
+    if (!nv || !nv->coTheHuyHoaDon())
+        return KetQua::Loi("Không tìm thấy nhân viên chức vụ Quản lý để ký duyệt hủy hóa đơn.");
 
     if (!data.qlHoaDon.huyHoaDon(hd->getMa(), nv))
         return KetQua::Loi("Không thể hủy hóa đơn (hóa đơn không tồn tại hoặc đã có giao dịch thanh toán).");
@@ -529,6 +579,28 @@ KetQua KhachSanService::thongKeBaoCaoDoanhThu(ThongKeDoanhThuChiTiet& kq) const 
         kq.doanhThuTheoLoai.push_back({maL, tenL, dt, pt});
     }
 
+    return KetQua::Ok();
+}
+
+KetQua KhachSanService::thongKeDoanhThuTheoKy(int nam, bool theoQuy, std::vector<DoanhThuKyHienThi>& kq,
+                                              long long& tongNam) const {
+    KetQua q = auth.yeuCau(Quyen::XEM_DOANH_THU);
+    if (!q) return q;
+
+    const int soKy = theoQuy ? 4 : 12;
+    kq.assign(soKy, DoanhThuKyHienThi{});
+    for (int i = 0; i < soKy; ++i) kq[i].nhan = (theoQuy ? "Q" : "T") + std::to_string(i + 1);
+    tongNam = 0;
+
+    for (HoaDon* h : data.qlHoaDon.tatCa()) {
+        if (h->getTrangThai() == TrangThaiHoaDon::DA_HUY) continue;
+        const Date& d = h->getNgayLap();
+        if (d.y != nam || d.m < 1 || d.m > 12) continue;
+        int idx = theoQuy ? (d.m - 1) / 3 : d.m - 1;
+        kq[idx].doanhThu += h->getDoanhThu();
+        ++kq[idx].soHoaDon;
+        tongNam += h->getDoanhThu();
+    }
     return KetQua::Ok();
 }
 
@@ -589,6 +661,13 @@ KetQua KhachSanService::xoaNhanVien(const std::string& ma) {
         if (h->getNhanVienLap() == nv) return KetQua::Loi("Không xóa được: nhân viên đã lập hóa đơn.");
         for (auto* tt : h->getThanhToan())
             if (tt->getNhanVienThu() == nv) return KetQua::Loi("Không xóa được: nhân viên đã thu tiền hóa đơn.");
+    }
+    std::vector<TaiKhoan> dsTK;
+    if (auth.danhSachTaiKhoan(dsTK).ok) {
+        for (const auto& tk : dsTK) {
+            if (tk.maNV == m)
+                return KetQua::Loi("Không thể xóa nhân viên " + m + " vì đang liên kết với tài khoản '" + tk.tenDangNhap + "'. Vui lòng gỡ liên kết trước.");
+        }
     }
     data.dsNhanVien.erase(std::remove_if(data.dsNhanVien.begin(), data.dsNhanVien.end(),
                                          [&](const std::unique_ptr<NhanVien>& p) { return p->getMa() == m; }),

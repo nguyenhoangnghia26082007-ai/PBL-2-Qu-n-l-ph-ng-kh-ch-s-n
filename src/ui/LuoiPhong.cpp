@@ -55,10 +55,9 @@ int LuoiPhong::ve(Rectangle vung, const std::vector<PhongHienThi>& ds, int dangC
         Theme::Chu(p.ma, x, o.y + 12, Theme::CO_VUA, Theme::CHU, true);
         // nhan trang thai dang "vien thuoc"
         std::string tt = tenTrangThai(p.tinhTrang);
-        Vector2 kt = Theme::DoChu(tt, Theme::CO_NHO - 1, true);
-        Rectangle nhan = {o.x + o.width - kt.x - 22, o.y + 14, kt.x + 16, 24};
-        DrawRectangleRounded(nhan, 1.0f, 8, Fade(mau, 0.14f));
-        Theme::ChuGiua(tt, nhan, Theme::CO_NHO - 1, mau, true);
+        float rongNhan = Widgets::rongBadge(tt, Theme::CO_NHO - 1, 8);
+        Rectangle nhan = {o.x + o.width - rongNhan - 6, o.y + 14, rongNhan, 24};
+        DrawBadge(tt, nhan, mau, Theme::CO_NHO - 1, 8);
 
         Theme::Chu(tenLoai(p.maLoai), x, o.y + 48, Theme::CO_NHO, Theme::CHU_PHU);
         std::string dong3 = p.tenKhach.empty() ? dinhDangTien(p.donGia) + "/đêm" : p.tenKhach;

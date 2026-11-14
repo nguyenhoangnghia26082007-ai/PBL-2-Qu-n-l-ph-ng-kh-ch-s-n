@@ -70,6 +70,12 @@ void AccountScreen::Draw(Rectangle vung) {
     Theme::Chu("Họ tên",    c1, yBang + 9, Theme::CO_NHO, Theme::CHU_PHU, true);
     Theme::Chu("Vai trò",   c2, yBang + 9, Theme::CO_NHO, Theme::CHU_PHU, true);
     Theme::Chu("Mật khẩu",  c3, yBang + 9, Theme::CO_NHO, Theme::CHU_PHU, true);
+    // Nut hien/an mat khau trong bang (mac dinh che bang dau *)
+    {
+        Vector2 ktMK = Theme::DoChu("Mật khẩu", Theme::CO_NHO, true);
+        Rectangle rMat = {c3 + ktMK.x + 8, yBang + 7, 44, 24};
+        if (VeNut(rMat, hienMatKhau ? "Ẩn" : "Hiện", KieuNut::MO, true, Theme::CO_NHO - 3)) hienMatKhau = !hienMatKhau;
+    }
     Theme::Chu("Trạng thái", c4, yBang + 9, Theme::CO_NHO, Theme::CHU_PHU, true);
 
     float yDong = yBang + 44;
@@ -88,7 +94,8 @@ void AccountScreen::Draw(Rectangle vung) {
         Theme::Chu(t.tenDangNhap, c0, yDong + 14, Theme::CO_NHO + 1, Theme::CHU, true);
         Theme::Chu(Theme::CatChu(t.hoTen, c2 - c1 - 8, Theme::CO_NHO), c1, yDong + 14, Theme::CO_NHO, Theme::CHU);
         Theme::Chu(PhanQuyen::tenVaiTro(t.vaiTro), c2, yDong + 14, Theme::CO_NHO - 1, Theme::CHINH, true);
-        Theme::Chu(Theme::CatChu(t.matKhau, c4 - c3 - 8, Theme::CO_NHO - 1), c3, yDong + 14, Theme::CO_NHO - 1, Theme::CHU_PHU);
+        std::string chuMK = hienMatKhau ? t.matKhau : std::string(t.matKhau.size(), '*');
+        Theme::Chu(Theme::CatChu(chuMK, c4 - c3 - 8, Theme::CO_NHO - 1), c3, yDong + 14, Theme::CO_NHO - 1, Theme::CHU_PHU);
 
         // Nhan trang thai + nut Mo khoa nhanh ngay tren dong neu bi khoa
         std::string tt = t.biKhoa ? "ĐÃ KHÓA" : (t.soLanSai > 0 ? ("Sai " + std::to_string(t.soLanSai) + "/5") : "Hoạt động");
@@ -119,7 +126,10 @@ void AccountScreen::Draw(Rectangle vung) {
 
     fy += 60;
     Theme::Chu("Mật khẩu (lưu trực tiếp)", fx, fy, Theme::CO_NHO + 1, Theme::CHU_PHU, true);
-    VeOTextNhap({fx, fy + 20, fr, 36}, oMatKhau);
+    oMatKhau.anKyTu = !hienMatKhau; // che mat khau trong o nhap, bam "Hiện" de xem
+    VeOTextNhap({fx, fy + 20, fr - 70, 36}, oMatKhau);
+    if (VeNut({fx + fr - 62, fy + 20, 62, 36}, hienMatKhau ? "Ẩn" : "Hiện", KieuNut::PHU, true, Theme::CO_NHO - 1))
+        hienMatKhau = !hienMatKhau;
 
     fy += 60;
     Theme::Chu("Họ tên nhân viên hiển thị", fx, fy, Theme::CO_NHO + 1, Theme::CHU_PHU, true);

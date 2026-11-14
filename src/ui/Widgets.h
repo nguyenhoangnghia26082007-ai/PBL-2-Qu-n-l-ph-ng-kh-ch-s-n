@@ -24,7 +24,16 @@ namespace Widgets {
     std::string dinhDangTienNhap(const std::string& chuoi);
     // Lay gia tri so nguyen (loai bo dau cach va ky tu khong phai so)
     long long layGiaTriTien(const std::string& chuoi);
+
+    // Nhan hien thi tieng Viet cho ma enum (vd "DA_THANH_TOAN" -> "Đã thanh toán").
+    // Chi doi chu hien tren giao dien; ma enum trong code va file du lieu giu nguyen.
+    std::string nhanHienThi(const std::string& maEnum);
+    // Chieu rong can cho huy hieu: do chu bang MeasureTextEx + dem 2 ben
+    float rongBadge(const std::string& nhan, int co, float dem = 12.0f);
 }
+
+// ---- Huy hieu (badge) bo tron: do chu, tu giam co chu / cat chu cho vua khung, can giua ----
+void DrawBadge(const std::string& nhan, Rectangle r, Color mau, int co = 14, float dem = 10.0f);
 
 // ---- O nhap chu (ho tro tieng Viet UTF-8, an ky tu cho mat khau, dinh dang tien) ----
 struct OTextNhap {

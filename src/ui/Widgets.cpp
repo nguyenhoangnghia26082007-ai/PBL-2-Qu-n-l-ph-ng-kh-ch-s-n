@@ -229,6 +229,35 @@ bool VeNut(Rectangle r, const std::string& nhan, KieuNut kieu, bool batDuoc, int
     return hover && IsMouseButtonReleased(MOUSE_BUTTON_LEFT);
 }
 
+// ===================== Nhan hien thi & huy hieu =====================
+std::string Widgets::nhanHienThi(const std::string& ma) {
+    // Trang thai hoa don
+    if (ma == "CHUA_THANH_TOAN")     return "Chưa thanh toán";
+    if (ma == "THANH_TOAN_MOT_PHAN") return "Trả một phần";
+    if (ma == "DA_THANH_TOAN")       return "Đã thanh toán";
+    if (ma == "DA_HUY")              return "Đã hủy";
+    // Hang thanh vien
+    if (ma == "THUONG")    return "Thường";
+    if (ma == "BAC")       return "Bạc";
+    if (ma == "VANG")      return "Vàng";
+    if (ma == "KIM_CUONG") return "Kim cương";
+    return ma;
+}
+
+float Widgets::rongBadge(const std::string& nhan, int co, float dem) {
+    return Theme::DoChu(nhan, co, true).x + 2 * dem;
+}
+
+void DrawBadge(const std::string& nhan, Rectangle r, Color mau, int co, float dem) {
+    DrawRectangleRounded(r, 1.0f, 8, Fade(mau, 0.12f));
+    float rongChu = r.width - 2 * dem;
+    // Giam co chu toi da 3 bac neu chu khong vua, sau do moi cat chu bang "…"
+    int c = co;
+    while (c > co - 3 && c > 10 && Theme::DoChu(nhan, c, true).x > rongChu) --c;
+    std::string hien = Theme::CatChu(nhan, rongChu, c, true);
+    Theme::ChuGiua(hien, r, c, mau, true);
+}
+
 // ===================== Thong bao =====================
 namespace {
 struct MucThongBao { std::string noiDung; ThongBao::Loai loai; double batDau; };
